@@ -47,7 +47,8 @@
             collapseBtnHTML : '<button data-action="collapse" type="button">Collapse</button>',
             group           : 0,
             maxDepth        : 5,
-            threshold       : 20
+            threshold       : 20,
+			elements        : undefined
         };
 
     function Plugin(element, options)
@@ -65,6 +66,11 @@
             var list = this;
 
             list.reset();
+			
+			if(this.options.elements !== undefined && this.options.elements.length)
+			{
+				this.unserialize(this.options.elements, list.el);
+			}
 
             list.el.data('nestable-group', this.options.group);
 
@@ -163,6 +169,43 @@
         {
             return this.serialize();
         },
+		
+		unserialize: function(elements, parent)
+		{
+			var list = this;
+			
+			var unserializeElements = function(elements, parent)
+			{
+				var listNode = $(document.createElement(list.options.listNodeName)).addClass(list.options.listClass);
+				
+				for(var i in elements)
+				{
+					var el = elements[i];
+					
+					var itemNode =
+							$(document.createElement(list.options.itemNodeName))
+							.data('id', el.id).data('name', el.name)
+							.addClass(list.options.itemClass)
+							.append(
+								$(document.createElement('div'))
+								.addClass(list.options.handleClass)
+								.text(el.name)
+							);
+					
+					if(el.children)
+					{
+						itemNode.append(unserializeElements(el.children, itemNode));
+					}
+					
+					listNode.append(itemNode);
+				}
+				
+				return listNode;
+			}
+			
+			var $list = unserializeElements(elements, parent);
+			$(parent).append($list);
+		},
 
         reset: function()
         {
